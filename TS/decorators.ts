@@ -9,13 +9,30 @@ interface ICar {
 class MyCar implements ICar {
 	fuel: string = '50%';
 	isOpen: boolean;
-	freeSeats: number = 3;
+
+	@MaxSeats(5)
+	freeSeats: number = 1;
 
 	@CheckAmountOfFuel
 	@CheckAmountOfFuelThis
 	checkIsOpen(reason?: string): string {
 		return this.isOpen ? 'open' : `close ${reason}`;
 	}
+}
+
+//Property decorator
+function MaxSeats(limit: number) {
+	return function (target: undefined, context: ClassFieldDecoratorContext) {
+		return function (this: any, newAmount: number) {
+			if (newAmount >= 0 && newAmount <= limit) {
+				return newAmount;
+			} else {
+				throw new Error(
+					`Incorrect value ${newAmount}, Min: 0 and Max: ${limit}`
+				);
+			}
+		};
+	};
 }
 
 //Method decorator typing with this
@@ -67,4 +84,5 @@ function ChangeFuelCount(value: number) {
 }
 
 const car = new MyCar();
+console.log(car);
 console.log(car.checkIsOpen('service time'));
