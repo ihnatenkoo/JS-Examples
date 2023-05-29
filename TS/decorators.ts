@@ -4,18 +4,45 @@ interface ICar {
 	freeSeats: number;
 }
 
-@ChangeDoorStatus(true)
+@ChangeDoorStatus(false)
 @ChangeFuelCount(75)
 class MyCar implements ICar {
 	fuel: string = '50%';
 	isOpen: boolean;
 	freeSeats: number = 3;
 
-	checkIsOpen() {
-		return this.isOpen ? 'open' : 'close';
+	@CheckAmountOfFuel
+	@CheckAmountOfFuelThis
+	checkIsOpen(reason?: string): string {
+		return this.isOpen ? 'open' : `close ${reason}`;
 	}
 }
 
+//Method decorator typing with this
+function CheckAmountOfFuelThis(
+	target: any,
+	context: ClassMethodDecoratorContext
+) {
+	return function (this: any, ...args: any[]) {
+		console.log(this.fuel);
+
+		return target.apply(this, args);
+	};
+}
+
+//Method decorator typing without this
+function CheckAmountOfFuel<T, A extends any[], R>(
+	target: (this: T, ...args: A) => R,
+	context: ClassMethodDecoratorContext<T, (this: T, ...args: A) => R>
+) {
+	return function (this: T, ...args: A): R {
+		console.log(`${String(context.name)} was executed`);
+
+		return target.apply(this, args);
+	};
+}
+
+//Class decorator
 function ChangeDoorStatus(status: boolean) {
 	return <T extends { new (...args: any[]): {} }>(
 		target: T,
@@ -27,6 +54,7 @@ function ChangeDoorStatus(status: boolean) {
 	};
 }
 
+//Class decorator
 function ChangeFuelCount(value: number) {
 	return <T extends { new (...args: any[]): {} }>(
 		target: T,
@@ -39,4 +67,4 @@ function ChangeFuelCount(value: number) {
 }
 
 const car = new MyCar();
-console.log(car);
+console.log(car.checkIsOpen('service time'));
